@@ -34,8 +34,8 @@ Aplikacja dla klientów fikcyjnego banku nBank.
 
 ## Authors
 
-- [@Hexagonist](https://www.github.com/octokatherine)
-- [@author](https://www.github.com/octokatherine)
-- [@author](https://www.github.com/octokatherine)
+- [@Hexagonist](https://github.com/Hexagonist)
+- [@Sjutzu](https://github.com/Sjutzu)
+- [@Woriork](https://github.com/Woriork)
 
 
