@@ -34,8 +34,8 @@ Aplikacja dla klientów fikcyjnego banku nBank.
 
 ## Autorzy
 
-- [@Hexagonist](https://github.com/Hexagonist)
-- [@Sjutzu](https://github.com/Sjutzu)
-- [@Woriork](https://github.com/Woriork)
+- [Mateusz Wójcicki @Hexagonist](https://github.com/Hexagonist)
+- [Daniel Zentlik @Sjutzu](https://github.com/Sjutzu)
+- [Wiktoria Roszkowska @Woriork](https://github.com/Woriork)
 
 
