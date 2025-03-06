@@ -32,7 +32,7 @@ Aplikacja dla klientów fikcyjnego banku nBank.
 - Budżet
 
 
-## Authors
+## Autorzy
 
 - [@Hexagonist](https://github.com/Hexagonist)
 - [@Sjutzu](https://github.com/Sjutzu)
