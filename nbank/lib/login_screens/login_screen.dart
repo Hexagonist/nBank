@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../navigation/app_routes.dart';
 import '../user/user.dart';
 
+User? loggedInUser;
+
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -17,11 +19,15 @@ class _LoginScreenState extends State<LoginScreen> {
       String email = _emailController.text;
       String password = _passwordController.text;
       
-      bool userExists = users.any((user) => user.email == email && user.password == password);
-      
-      if (userExists) {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      } else {
+      final user = users.firstWhere(
+        (user) => user.email == email && user.password == password,
+        orElse: () => User(email: '', password: '', pin: ''),
+      );
+
+      if (user.email.isNotEmpty) {
+        loggedInUser = user;
+         Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Nieprawidłowy email lub hasło")),
         );

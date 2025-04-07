@@ -24,7 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           SnackBar(content: Text("Użytkownik już istnieje")),
         );
       } else {
-        users.add(User(email: email, password: password));
+        users.add(User(email: email, password: password, pin: "1234"));
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     }
