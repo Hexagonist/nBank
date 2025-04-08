@@ -4,6 +4,8 @@ import 'login_screen.dart';
 
 
 class PinLockScreen extends StatefulWidget {
+  const PinLockScreen({super.key});
+
   @override
   _PinLockScreenState createState() => _PinLockScreenState();
 }
