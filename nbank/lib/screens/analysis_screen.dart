@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../data/transaction_repository.dart';
 import '../models/transaction_model.dart';
 
+import '../login_screens/session_menager.dart';
+
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({Key? key}) : super(key: key);
 
@@ -13,6 +15,7 @@ class AnalysisScreen extends StatefulWidget {
 }
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
+  final SessionManager _sessionManager = SessionManager();
   final TransactionRepository _repo = TransactionRepository();
   Map<String, double> _monthlyTotals = {};
 
@@ -41,7 +44,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final List<String> months = _monthlyTotals.keys.toList();
     final List<double> values = _monthlyTotals.values.toList();
 
-    return Scaffold(
+    return GestureDetector(
+      onTap: _sessionManager.handleUserInteraction,
+      onPanDown: (_) => _sessionManager.handleUserInteraction(),
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
       appBar: AppBar(title: const Text("Analiza wydatków")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -89,7 +96,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   ),
                 ),
               ),
-      ),
+        ),
+      )
     );
   }
 }

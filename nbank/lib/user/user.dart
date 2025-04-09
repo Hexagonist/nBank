@@ -9,4 +9,5 @@ class User {
 List<User> users = [
   User(email: "user1@example.com", password: "password123", pin: "1234"),
   User(email: "user2@example.com", password: "password456", pin: "5678"),
+  User(email: "admin", password: "haslo", pin: "123"),
 ];
