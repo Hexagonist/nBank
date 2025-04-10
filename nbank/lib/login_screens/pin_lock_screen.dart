@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../navigation/app_routes.dart';
@@ -70,9 +72,14 @@ class PinCodeWidget extends StatefulWidget {
 class _PinCodeWidgetState extends State<PinCodeWidget> {
   String enteredPin = '';
   bool isPinVisible = false;
-
+  int failedAttempts = 0;
+  bool isLocked = false;
+  int lockoutSeconds = 3;
+  Timer? lockoutTimer;
 
   void _checkPin() {
+    if (isLocked) return;
+
     if (loggedInUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Brak zalogowanego użytkownika")),
@@ -84,24 +91,50 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
     if (enteredPin == loggedInUser!.pin) {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } else {
+      failedAttempts++;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Niepoprawny PIN")),
       );
+
+      if (failedAttempts >= 3) {
+        _startLockout();
+      }
     }
   }
 
-  /// this widget will be use for each digit
+  void _startLockout() {
+    setState(() {
+      isLocked = true;
+      failedAttempts = 0; // Reset failed attempts after lockout starts
+    });
+
+    lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (lockoutSeconds > 1) {
+          lockoutSeconds--;
+        } else {
+          lockoutTimer?.cancel();
+          lockoutTimer = null;
+          isLocked = false;
+          lockoutSeconds = 3; // Reset lockout timer
+        }
+      });
+    });
+  }
+
   Widget numButton(int number) {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: TextButton(
-        onPressed: () {
-          setState(() {
-            if (enteredPin.length < 4) {
-              enteredPin += number.toString();
-            }
-          });
-        },
+        onPressed: isLocked
+            ? null
+            : () {
+                setState(() {
+                  if (enteredPin.length < 4) {
+                    enteredPin += number.toString();
+                  }
+                });
+              },
         child: Text(
           number.toString(),
           style: const TextStyle(
@@ -125,7 +158,7 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
           children: [
             const Center(
               child: Text(
-                'Enter Your Pin',
+                'Wprowadź Pin',
                 style: TextStyle(
                   fontSize: 32,
                   color: Colors.black,
@@ -135,7 +168,7 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
             ),
             const SizedBox(height: 50),
 
-            /// pin code area
+            /// PIN code area
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -170,7 +203,7 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
               ),
             ),
 
-            /// visiblity toggle button
+            /// Visibility toggle button
             IconButton(
               onPressed: () {
                 setState(() {
@@ -184,7 +217,7 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
 
             SizedBox(height: isPinVisible ? 50.0 : 8.0),
 
-            /// digits
+            /// Digits
             for (var i = 0; i < 3; i++)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -206,16 +239,18 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                   const TextButton(onPressed: null, child: SizedBox()),
                   numButton(0),
                   TextButton(
-                    onPressed: () {
-                      setState(
-                        () {
-                          if (enteredPin.isNotEmpty) {
-                            enteredPin =
-                                enteredPin.substring(0, enteredPin.length - 1);
-                          }
-                        },
-                      );
-                    },
+                    onPressed: isLocked
+                        ? null
+                        : () {
+                            setState(
+                              () {
+                                if (enteredPin.isNotEmpty) {
+                                  enteredPin = enteredPin.substring(
+                                      0, enteredPin.length - 1);
+                                }
+                              },
+                            );
+                          },
                     child: const Icon(
                       Icons.backspace,
                       color: Colors.black,
@@ -226,14 +261,15 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
               ),
             ),
 
-
-            /// reset button
+            /// Reset button
             TextButton(
-              onPressed: () {
-                setState(() {
-                  enteredPin = '';
-                });
-              },
+              onPressed: isLocked
+                  ? null
+                  : () {
+                      setState(() {
+                        enteredPin = '';
+                      });
+                    },
               child: const Text(
                 'Reset',
                 style: TextStyle(
@@ -243,13 +279,39 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
               ),
             ),
 
-            ElevatedButton(
+            /// Unlock button
+            TextButton(
               onPressed: _checkPin,
-              child: Text("Odblokuj"),
+              child: Text(
+                'Odblokuj',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                ),
+              ),
             ),
+
+            /// Lockout timer
+            if (isLocked)
+              Center(
+                child: Text(
+                  'Zablokowane na $lockoutSeconds sekundy',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    lockoutTimer?.cancel();
+    super.dispose();
   }
 }
