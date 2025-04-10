@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/login_screens/set_pin_screen.dart';
 import '../navigation/app_routes.dart';
 import '../user/user.dart';
 
@@ -26,8 +27,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           SnackBar(content: Text("Użytkownik już istnieje")),
         );
       } else {
-        users.add(User(email: email, password: password, pin: "1234"));
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
+        // Navigate to the SetPinScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SetPinScreen(email: email, password: password),
+        ),
+      );
       }
     }
   }
