@@ -38,6 +38,7 @@ dependencies:
   #
   fl_chart: ^0.64.0 
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -51,6 +52,7 @@ dev_dependencies:
 
   #
   intl: ^0.18.1
+  firebase_core: ^2.18.0 
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
