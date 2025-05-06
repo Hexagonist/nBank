@@ -15,6 +15,11 @@ class SessionManager {
     _context = context;
     _resetTimer();
   }
+  void stop() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = null;
+    _context = null;
+  }
 
   void _resetTimer() {
     _inactivityTimer?.cancel();
