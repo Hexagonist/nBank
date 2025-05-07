@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../navigation/app_routes.dart';
-import '../user/user.dart';
+//import '../user/user.dart';
 
 class SetPinScreen extends StatefulWidget {
   final String email;
@@ -22,7 +22,7 @@ class _SetPinScreenState extends State<SetPinScreen> {
       String pin = _pinController.text;
 
       // Add the new user with the provided email, password, and pin
-      users.add(User(email: widget.email, password: widget.password, pin: pin));
+      //users.add(User(email: widget.email, password: widget.password, pin: pin));
 
       // Navigate to the login screen
       Navigator.pushReplacementNamed(context, AppRoutes.login);

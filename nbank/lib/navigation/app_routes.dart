@@ -19,8 +19,7 @@ class AppRoutes {
       login: (context) => LoginScreen(),
       home: (context) => HomeScreen(),
       register: (context) => RegisterScreen(),
-      // pinlock: (context) => PinLockScreen(),
-      pinlock: (context) => PinCodeWidget(),
+      //pinlock: (context) => PinCodeWidget(),
       transactions: (context) => TransactionsScreen(),
       analysis: (context) => AnalysisScreen(),
     };
