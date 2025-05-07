@@ -22,7 +22,7 @@ class AppRoutes {
       home: (context) => HomeScreen(),
       register: (context) => RegisterScreen(),
       setPin: (context) => SetPinScreen(),
-      //pinlock: (context) => PinCodeWidget(),
+      pinlock: (context) => PinCodeWidget(),
       transactions: (context) => TransactionsScreen(),
       analysis: (context) => AnalysisScreen(),
     };
