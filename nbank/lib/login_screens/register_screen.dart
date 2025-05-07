@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../navigation/app_routes.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,22 +15,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void _register() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-        // Możesz tu przekierować do ustawienia PINu:
-        // Navigator.push(...SetPinScreen);
-        Navigator.pop(context); // Wracamy do logowania po rejestracji
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Błąd rejestracji: ${e.toString()}")),
-        );
-      }
+  if (_formKey.currentState!.validate()) {
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // Po udanej rejestracji przechodzimy do ustawienia PIN-u
+      Navigator.pushReplacementNamed(context, AppRoutes.setPin);
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Błąd rejestracji: ${e.toString()}")),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

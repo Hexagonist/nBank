@@ -5,6 +5,7 @@ import '../screens/home_screen.dart';
 import '../login_screens/register_screen.dart';
 import '../login_screens/pin_lock_screen.dart';
 import '../screens/analysis_screen.dart';
+import '../login_screens/set_pin_screen.dart';
 
 class AppRoutes {
   static const String login = '/';
@@ -13,12 +14,14 @@ class AppRoutes {
   static const String pinlock = '/pinlock';
   static const transactions = '/transactions';
   static const String analysis = '/analysis';
+  static const String setPin = '/setpin';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       login: (context) => LoginScreen(),
       home: (context) => HomeScreen(),
       register: (context) => RegisterScreen(),
+      setPin: (context) => SetPinScreen(),
       //pinlock: (context) => PinCodeWidget(),
       transactions: (context) => TransactionsScreen(),
       analysis: (context) => AnalysisScreen(),

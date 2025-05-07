@@ -1,81 +1,207 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../navigation/app_routes.dart';
-//import '../user/user.dart';
 
 class SetPinScreen extends StatefulWidget {
-  final String email;
-  final String password;
-
-  const SetPinScreen({super.key, required this.email, required this.password});
+  const SetPinScreen({super.key});
 
   @override
   _SetPinScreenState createState() => _SetPinScreenState();
 }
 
 class _SetPinScreenState extends State<SetPinScreen> {
-  final TextEditingController _pinController = TextEditingController();
-  final TextEditingController _confirmPinController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String pin = '';
+  String confirmPin = '';
+  bool isConfirming = false;
+  bool isPinVisible = false;
 
-  void _setPin() {
-    if (_formKey.currentState!.validate()) {
-      String pin = _pinController.text;
+  void _onDigitPressed(int digit) {
+    setState(() {
+      if ((isConfirming ? confirmPin : pin).length < 4) {
+        if (isConfirming) {
+          confirmPin += digit.toString();
+        } else {
+          pin += digit.toString();
+        }
+      }
+    });
+  }
 
-      // Add the new user with the provided email, password, and pin
-      //users.add(User(email: widget.email, password: widget.password, pin: pin));
+  void _onBackspace() {
+    setState(() {
+      if (isConfirming) {
+        if (confirmPin.isNotEmpty) {
+          confirmPin = confirmPin.substring(0, confirmPin.length - 1);
+        }
+      } else {
+        if (pin.isNotEmpty) {
+          pin = pin.substring(0, pin.length - 1);
+        }
+      }
+    });
+  }
 
-      // Navigate to the login screen
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
+  void _onSubmit() async {
+    if (pin.length != 4 || confirmPin.length != 4) return;
+
+    if (pin != confirmPin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("PINy się różnią")),
+      );
+      return;
     }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Nie zalogowano użytkownika")),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'pin': pin,
+        'email': user.email,
+      });
+
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Błąd zapisu PINu: ${e.toString()}")),
+      );
+    }
+  }
+
+  Widget _buildPinDots(String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        4,
+        (index) {
+          final isFilled = index < value.length;
+          return Container(
+            margin: const EdgeInsets.all(6.0),
+            width: isPinVisible ? 50 : 16,
+            height: isPinVisible ? 50 : 16,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6.0),
+              color: isFilled
+                  ? isPinVisible
+                      ? Colors.green
+                      : CupertinoColors.activeBlue
+                  : CupertinoColors.activeBlue.withOpacity(0.1),
+            ),
+            child: isPinVisible && isFilled
+                ? Center(
+                    child: Text(
+                      value[index],
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                : null,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNumberPad() {
+    List<Widget> rows = [];
+    for (var i = 0; i < 3; i++) {
+      rows.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(
+            3,
+            (index) {
+              int digit = 1 + i * 3 + index;
+              return _buildNumButton(digit);
+            },
+          ),
+        ),
+      );
+    }
+
+    rows.add(
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          const SizedBox(width: 64), // empty space
+          _buildNumButton(0),
+          IconButton(
+            onPressed: _onBackspace,
+            icon: const Icon(Icons.backspace, size: 28),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      children: rows,
+    );
+  }
+
+  Widget _buildNumButton(int digit) {
+    return TextButton(
+      onPressed: () => _onDigitPressed(digit),
+      child: Text(
+        digit.toString(),
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentPin = isConfirming ? confirmPin : pin;
+
     return Scaffold(
       appBar: AppBar(title: Text("Ustaw PIN")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextFormField(
-                controller: _pinController,
-                decoration: InputDecoration(labelText: "Wprowadź PIN"),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Wprowadź PIN";
-                  }
-                  if (value.length != 4) {
-                    return "PIN musi mieć 4 cyfry";
-                  }
-                  return null;
+              const SizedBox(height: 40),
+              Text(
+                isConfirming ? "Potwierdź PIN" : "Wprowadź PIN",
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 24),
+              _buildPinDots(currentPin),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    isPinVisible = !isPinVisible;
+                  });
                 },
+                icon: Icon(
+                  isPinVisible ? Icons.visibility_off : Icons.visibility,
+                ),
               ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _confirmPinController,
-                decoration: InputDecoration(labelText: "Potwierdź PIN"),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Potwierdź PIN";
-                  }
-                  if (value != _pinController.text) {
-                    return "PINy muszą być takie same";
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _setPin,
-                child: Text("Zatwierdź PIN"),
-              ),
+              const SizedBox(height: 24),
+              _buildNumberPad(),
+              const SizedBox(height: 24),
+              if (currentPin.length == 4)
+                ElevatedButton(
+                  onPressed: () {
+                    if (isConfirming) {
+                      _onSubmit();
+                    } else {
+                      setState(() {
+                        isConfirming = true;
+                      });
+                    }
+                  },
+                  child: Text(isConfirming ? "Zatwierdź PIN" : "Dalej"),
+                ),
             ],
           ),
         ),
