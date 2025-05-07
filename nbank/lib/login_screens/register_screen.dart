@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/login_screens/set_pin_screen.dart';
-import '../navigation/app_routes.dart';
 import '../user/user.dart';
 
 class RegisterScreen extends StatefulWidget {

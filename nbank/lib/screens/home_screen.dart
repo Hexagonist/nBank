@@ -49,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, AppRoutes.login);
+                  _sessionManager.stop(); 
                 },
                 child: Text("Wyloguj"),
               ),

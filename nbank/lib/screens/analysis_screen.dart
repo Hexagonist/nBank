@@ -8,7 +8,7 @@ import '../models/transaction_model.dart';
 import '../login_screens/session_menager.dart';
 
 class AnalysisScreen extends StatefulWidget {
-  const AnalysisScreen({Key? key}) : super(key: key);
+  const AnalysisScreen({super.key});
 
   @override
   State<AnalysisScreen> createState() => _AnalysisScreenState();
