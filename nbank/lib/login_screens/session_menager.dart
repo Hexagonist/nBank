@@ -8,7 +8,7 @@ class SessionManager {
   SessionManager._internal();
 
   Timer? _inactivityTimer;
-  final Duration timeout = Duration(seconds: 6); // CZAS DO WYGASNIECIA
+  final Duration timeout = Duration(seconds: 60); // CZAS DO WYGASNIECIA
   BuildContext? _context;
 
   void start(BuildContext context) {

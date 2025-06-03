@@ -5,19 +5,21 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../navigation/app_routes.dart';
 
-class PinCodeWidget extends StatefulWidget {
-  const PinCodeWidget({super.key});
+class PinLockScreen extends StatefulWidget {
+  final VoidCallback? onPinCorrect;
+
+  const PinLockScreen({super.key, this.onPinCorrect});
 
   @override
-  State<PinCodeWidget> createState() => _PinCodeWidgetState();
+  State<PinLockScreen> createState() => _PinLockScreenState();
 }
 
-class _PinCodeWidgetState extends State<PinCodeWidget> {
+class _PinLockScreenState extends State<PinLockScreen> {
   String enteredPin = '';
   bool isPinVisible = false;
   int failedAttempts = 0;
   bool isLocked = false;
-  int lockoutSeconds = 3;
+  int lockoutSeconds = 30; // Zmieniony na 30 sekund
   Timer? lockoutTimer;
 
   Future<String?> fetchUserPin() async {
@@ -50,7 +52,11 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
     }
 
     if (enteredPin == correctPin) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      if (widget.onPinCorrect != null) {
+        widget.onPinCorrect!();
+      } else {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
     } else {
       failedAttempts++;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,15 +75,18 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
       failedAttempts = 0;
     });
 
+    int secondsLeft = lockoutSeconds;
+
     lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        if (lockoutSeconds > 1) {
-          lockoutSeconds--;
+        if (secondsLeft > 1) {
+          secondsLeft--;
         } else {
           lockoutTimer?.cancel();
           lockoutTimer = null;
           isLocked = false;
-          lockoutSeconds = 3;
+          secondsLeft = lockoutSeconds;
+          enteredPin = '';
         }
       });
     });
@@ -117,18 +126,18 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           physics: const BouncingScrollPhysics(),
           children: [
+            const SizedBox(height: 50),
             const Center(
               child: Text(
                 'Wprowadź PIN',
                 style: TextStyle(
                   fontSize: 32,
-                  color: Colors.black,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black,
                 ),
               ),
             ),
             const SizedBox(height: 50),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -162,7 +171,6 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 },
               ),
             ),
-
             IconButton(
               onPressed: () {
                 setState(() {
@@ -171,11 +179,10 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
               },
               icon: Icon(
                 isPinVisible ? Icons.visibility_off : Icons.visibility,
+                color: Colors.black,
               ),
             ),
-
             SizedBox(height: isPinVisible ? 50.0 : 8.0),
-
             for (var i = 0; i < 3; i++)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -184,16 +191,15 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                   children: List.generate(
                     3,
                     (index) => numButton(1 + 3 * i + index),
-                  ).toList(),
+                  ),
                 ),
               ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const TextButton(onPressed: null, child: SizedBox()),
+                  const SizedBox(width: 48), // puste miejsce zamiast przycisku
                   numButton(0),
                   TextButton(
                     onPressed: isLocked
@@ -214,7 +220,6 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 ],
               ),
             ),
-
             TextButton(
               onPressed: isLocked
                   ? null
@@ -231,7 +236,6 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 ),
               ),
             ),
-
             TextButton(
               onPressed: _checkPin,
               child: const Text(
@@ -242,15 +246,14 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 ),
               ),
             ),
-
             if (isLocked)
               Center(
                 child: Text(
-                  'Zablokowane na $lockoutSeconds sekundy',
+                  'Zablokowane na $lockoutSeconds sekund',
                   style: const TextStyle(
                     fontSize: 18,
-                    color: Colors.red,
                     fontWeight: FontWeight.bold,
+                    color: Colors.red,
                   ),
                 ),
               ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../navigation/app_routes.dart';
+import '../data/generate_account_number.dart';
 
 class SetPinScreen extends StatefulWidget {
   const SetPinScreen({super.key});
@@ -62,18 +63,23 @@ class _SetPinScreenState extends State<SetPinScreen> {
     }
 
     try {
+      final nrb = await generateValidUniqueNRB(); // 🔥 tutaj generujemy unikalny NRB
+
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'pin': pin,
         'email': user.email,
+        'balance': 1000,
+        'accountNumber': nrb, // 💸 zapisujemy numer konta
       });
 
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Błąd zapisu PINu: ${e.toString()}")),
+        SnackBar(content: Text("Błąd zapisu: ${e.toString()}")),
       );
     }
-  }
+}
+
 
   Widget _buildPinDots(String value) {
     return Row(
