@@ -28,11 +28,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   List<TransactionModel> applyFilters(List<TransactionModel> transactions) {
     return transactions.where((tx) {
-      // 🔹 Filtr typu transakcji
+      // Filtr typu
       if (selectedTypeFilter == 'Uznania' && tx.type != true) return false;
       if (selectedTypeFilter == 'Obciążenia' && tx.type != false) return false;
 
-      // 🔹 Filtr daty
+      // Filtr daty
       final now = DateTime.now();
       final difference = now.difference(tx.date).inDays;
 
@@ -53,10 +53,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: _sessionManager.handleUserInteraction,
-        onPanDown: (_) => _sessionManager.handleUserInteraction(),
-        behavior: HitTestBehavior.translucent,
-        child: Scaffold(
+      onTap: _sessionManager.handleUserInteraction,
+      onPanDown: (_) => _sessionManager.handleUserInteraction(),
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
         appBar: AppBar(title: Text('Transakcje')),
         body: FutureBuilder<List<TransactionModel>>(
           future: _transactionsFuture,
@@ -72,7 +72,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  // 🔹 Filtry daty
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text("Filtr daty:", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -92,8 +91,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         .toList(),
                   ),
                   const SizedBox(height: 10),
-
-                  // 🔹 Filtry typu
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text("Typ transakcji:", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -113,29 +110,32 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         .toList(),
                   ),
                   const SizedBox(height: 20),
-
-                  // 🔹 Lista transakcji
                   Expanded(
                     child: ListView.builder(
                       itemCount: filteredTransactions.length,
                       itemBuilder: (context, index) {
                         final tx = filteredTransactions[index];
                         final typeLabel = tx.type ? 'Uznanie' : 'Obciążenie';
+                        final sign = tx.type ? '+' : '-';
 
                         return ListTile(
-                          title: Text(tx.shop),
+                          title: Text(tx.title),
                           subtitle: Text(
                             '${DateFormat('dd.MM.yyyy').format(tx.date)} • $typeLabel',
                             style: TextStyle(color: Colors.grey[600]),
                           ),
-                          trailing: Text('${tx.amount.toStringAsFixed(2)} zł'),
+                          trailing: Text(
+                            '$sign${tx.amount.toStringAsFixed(2)} zł',
+                            style: TextStyle(
+                              color: tx.type ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         );
                       },
                     ),
                   ),
-
-                  // 🔹 Przycisk do analizy
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pushNamed(context, AppRoutes.analysis);
