@@ -143,6 +143,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     icon: Icon(Icons.bar_chart),
                     label: Text("Wykresy – analizuj wydatki"),
                   ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.budget);
+                    },
+                    icon: Icon(Icons.pie_chart),
+                    label: Text("Budżet – zarządzaj finansami"),
+                  ),
                 ],
               ),
             );
