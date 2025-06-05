@@ -1,6 +1,6 @@
 
 # nBank
-
+![Logo projektu](nBank/nBank_icon.png)
 Aplikacja dla klientów fikcyjnego banku nBank.
 
 
