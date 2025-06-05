@@ -32,6 +32,48 @@ class _BudgetScreenState extends State<BudgetScreen> {
     _loadBudgetData();
   }
 
+    Future<void> _changeBudgetDialog() async {
+    final controller = TextEditingController(text: _totalBudget.toStringAsFixed(2));
+    final user = FirebaseAuth.instance.currentUser;
+
+    double? newBudget;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zmień budżet miesięczny'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'Nowy budżet (zł)'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              newBudget = double.tryParse(controller.text.replaceAll(',', '.'));
+              if (newBudget != null && user != null) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .update({'budget': newBudget});
+                setState(() {
+                  _totalBudget = newBudget!;
+                  _left = (_totalBudget - _spent).clamp(0, _totalBudget);
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _loadBudgetData() async {
     setState(() {
       _loading = true;
@@ -77,7 +119,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredTransactions = applyTypeFilter(_transactions);
+    final filteredTransactions = applyTypeFilter(_transactions)
+      ..sort((a, b) => b.date.compareTo(a.date));
 
     return GestureDetector(
       onTap: _sessionManager.handleUserInteraction,
@@ -94,9 +137,19 @@ class _BudgetScreenState extends State<BudgetScreen> {
               : Column(
                   children: [
                     const SizedBox(height: 24),
-                    Text(
-                      "Twój budżet miesięczny: ${_totalBudget.toStringAsFixed(2)} zł",
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Twój budżet miesięczny: ${_totalBudget.toStringAsFixed(2)} zł",
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.indigo),
+                          tooltip: 'Zmień budżet',
+                          onPressed: _changeBudgetDialog,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     SizedBox(

@@ -26,4 +26,8 @@ class TransactionModel {
       type: isCredit,
     );
   }
+
+  get senderID => null;
+
+  get accountNumber => null;
 }

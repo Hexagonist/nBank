@@ -32,6 +32,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       if (selectedTypeFilter == 'Uznania' && tx.type != true) return false;
       if (selectedTypeFilter == 'Obciążenia' && tx.type != false) return false;
 
+      
       // Filtr daty
       final now = DateTime.now();
       final difference = now.difference(tx.date).inDays;
@@ -66,7 +67,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             }
 
             final allTransactions = snapshot.data ?? [];
-            final filteredTransactions = applyFilters(allTransactions);
+            final filteredTransactions = applyFilters(allTransactions)
+            ..sort((a, b) => b.date.compareTo(a.date));
 
             return Padding(
               padding: const EdgeInsets.all(16.0),

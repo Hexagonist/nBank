@@ -36,13 +36,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
         final transactions = snapshot.data!;
 
-        // Rozpoznawanie typu transakcji jak w TransactionsScreen
-        final Map<String, double> inflows = {};   // uznania (przychody)
-        final Map<String, double> outflows = {};  // obciążenia (wydatki)
+        final Map<String, double> inflows = {};   
+        final Map<String, double> outflows = {};  
 
         for (var tx in transactions) {
           final String key = '${tx.date.year}-${tx.date.month}';
-          // Rozpoznanie na podstawie pola type
           if (tx.type == true) {
             inflows[key] = (inflows[key] ?? 0) + tx.amount.abs();
           } else if (tx.type == false) {
@@ -90,6 +88,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     show: true,
                     drawVerticalLine: false,
                     horizontalInterval: maxY / 4,
+                    checkToShowHorizontalLine: (value) {
+                    // Zawsze pokazuj linię na 0 i maxY, oraz na pozostałych przedziałach
+                    return value == 0 || (value - maxY).abs() < 1 || value % (maxY / 4) == 0;
+                  },
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
@@ -98,7 +100,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         reservedSize: 40,
                         interval: maxY / 4,
                         getTitlesWidget: (value, meta) {
-                          if (value == 0 || (value - maxY).abs() < 1) {
+                          // Zawsze pokazuj 0 i maxY, nawet jeśli nie są dokładnie na linii siatki
+                          if (value == 0 || (value - maxY).abs() < 1 || value % (maxY / 4) == 0) {
                             return Padding(
                               padding: const EdgeInsets.only(right: 8.0),
                               child: Text(
@@ -112,20 +115,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       ),
                     ),
                     rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          if (value == 0 || (value - maxY).abs() < 1) {
-                            return Text(
-                              value.toInt().toString(),
-                              style: const TextStyle(fontSize: 12),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,

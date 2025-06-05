@@ -69,6 +69,7 @@ class _SetPinScreenState extends State<SetPinScreen> {
         'pin': pin,
         'email': user.email,
         'balance': 1000,
+        'budget': 1000,
         'accountNumber': nrb, // 💸 zapisujemy numer konta
       });
 
