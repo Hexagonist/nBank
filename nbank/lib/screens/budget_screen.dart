@@ -54,7 +54,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
     for (var tx in transactions) {
       if (tx.date.year == now.year && tx.date.month == now.month) {
         currentMonthTransactions.add(tx);
-        if (tx.amount < 0) spent += tx.amount;
+        if (!tx.type) spent += tx.amount;
       }
     }
 
@@ -127,7 +127,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                               ),
                             ),
                           ],
-                          sectionsSpace: 4,
+                          sectionsSpace: 0,
                           centerSpaceRadius: 40,
                         ),
                       ),

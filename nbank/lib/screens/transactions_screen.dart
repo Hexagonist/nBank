@@ -17,7 +17,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   final TransactionRepository _repo = TransactionRepository();
   late Future<List<TransactionModel>> _transactionsFuture;
 
-  String selectedDateFilter = 'Ostatni';
+  String selectedDateFilter = 'Tydzień';
   String selectedTypeFilter = 'Wszystkie';
 
   @override
@@ -37,7 +37,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final difference = now.difference(tx.date).inDays;
 
       switch (selectedDateFilter) {
-        case 'Ostatni':
+        case 'Tydzień':
           return difference <= 7;
         case 'Miesiąc':
           return difference <= 30;
@@ -78,7 +78,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   ),
                   Wrap(
                     spacing: 10,
-                    children: ['Ostatni', 'Miesiąc', 'Rok', 'Cały okres']
+                    children: ['Tydzień', 'Miesiąc', 'Rok', 'Cały okres']
                         .map((label) => ChoiceChip(
                               label: Text(label),
                               selected: selectedDateFilter == label,
@@ -111,29 +111,34 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   ),
                   const SizedBox(height: 20),
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: filteredTransactions.length,
-                      itemBuilder: (context, index) {
-                        final tx = filteredTransactions[index];
-                        final typeLabel = tx.type ? 'Uznanie' : 'Obciążenie';
-                        final sign = tx.type ? '+' : '-';
-
-                        return ListTile(
-                          title: Text(tx.title),
-                          subtitle: Text(
-                            '${DateFormat('dd.MM.yyyy').format(tx.date)} • $typeLabel',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          trailing: Text(
-                            '$sign${tx.amount.toStringAsFixed(2)} zł',
-                            style: TextStyle(
-                              color: tx.type ? Colors.green : Colors.red,
-                              fontWeight: FontWeight.bold,
+                      child: filteredTransactions.isEmpty
+                          ? const Center(child: Text("Brak transakcji"))
+                          : ListView.builder(
+                              itemCount: filteredTransactions.length,
+                              itemBuilder: (context, index) {
+                                final t = filteredTransactions[index];
+                                final typeLabel = t.type ? 'Uznanie' : 'Obciążenie';
+                                final sign = t.type ? '+' : '-';
+                                return ListTile(
+                                  leading: Icon(
+                                    t.type ? Icons.arrow_downward : Icons.arrow_upward,
+                                    color: t.type ? Colors.green : Colors.red,
+                                  ),
+                                  title: Text(t.title),
+                                  subtitle: Text(
+                                    '${DateFormat('dd.MM.yyyy').format(t.date)} • $typeLabel',
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                  trailing: Text(
+                                    '$sign${t.amount.toStringAsFixed(2)} zł',
+                                    style: TextStyle(
+                                      color: t.type ? Colors.green : Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          ),
-                        );
-                      },
-                    ),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(

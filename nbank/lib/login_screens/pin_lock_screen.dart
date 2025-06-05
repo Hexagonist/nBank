@@ -19,7 +19,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
   bool isPinVisible = false;
   int failedAttempts = 0;
   bool isLocked = false;
-  int lockoutSeconds = 300; // Zmieniony na 30 sekund
+  int lockoutSeconds = 3000; // Zmieniony na 30 sekund
   Timer? lockoutTimer;
 
   Future<String?> fetchUserPin() async {
