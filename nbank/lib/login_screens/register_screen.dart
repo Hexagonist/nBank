@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/login_screens/set_pin_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../navigation/app_routes.dart';
-import '../user/user.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,28 +14,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  void _register() {
-    if (_formKey.currentState!.validate()) {
-      String email = _emailController.text;
-      String password = _passwordController.text;
-
-      bool userExists = users.any((user) => user.email == email);
-      
-      if (userExists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Użytkownik już istnieje")),
-        );
-      } else {
-        // Navigate to the SetPinScreen
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SetPinScreen(email: email, password: password),
-        ),
+  void _register() async {
+  if (_formKey.currentState!.validate()) {
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
       );
-      }
+
+      // Po udanej rejestracji przechodzimy do ustawienia PIN-u
+      Navigator.pushReplacementNamed(context, AppRoutes.setPin);
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Błąd rejestracji: ${e.toString()}")),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -52,25 +48,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: "Email"),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Wprowadź email";
-                  }
-                  return null;
-                },
+                validator: (value) => value!.isEmpty ? "Wprowadź email" : null,
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: "Hasło"),
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Wprowadź hasło";
-                  }
-                  return null;
-                },
+                validator: (value) => value!.isEmpty ? "Wprowadź hasło" : null,
               ),
               SizedBox(height: 24),
               ElevatedButton(

@@ -1,99 +1,66 @@
 import 'dart:async';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../navigation/app_routes.dart';
-import 'login_screen.dart';
 
+class PinLockScreen extends StatefulWidget {
+  final VoidCallback? onPinCorrect;
 
-class PinCodeWidget extends StatefulWidget {
-  const PinCodeWidget({super.key});
+  const PinLockScreen({super.key, this.onPinCorrect});
 
   @override
-  // _PinLockScreenState createState() => _PinLockScreenState();
-  State<PinCodeWidget> createState() => _PinCodeWidgetState();
+  State<PinLockScreen> createState() => _PinLockScreenState();
 }
 
-// class _PinLockScreenState extends State<PinLockScreen> {
-//   final TextEditingController _pinController = TextEditingController();
-
-//   void _checkPin() {
-//     if (loggedInUser == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text("Brak zalogowanego użytkownika")),
-//       );
-//       Navigator.pushReplacementNamed(context, AppRoutes.login);
-//       return;
-//     }
-
-//     if (_pinController.text == loggedInUser!.pin) {
-//       Navigator.pushReplacementNamed(context, AppRoutes.home);
-//     } else {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text("Niepoprawny PIN")),
-//       );
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text("Wprowadź PIN")),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Text("Aplikacja została zablokowana po bezczynności."),
-//             SizedBox(height: 12),
-//             TextField(
-//               controller: _pinController,
-//               decoration: InputDecoration(labelText: "PIN"),
-//               obscureText: true,
-//               keyboardType: TextInputType.number,
-//             ),
-//             SizedBox(height: 24),
-//             ElevatedButton(
-//               onPressed: _checkPin,
-//               child: Text("Odblokuj"),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-
-
-
-
-
-class _PinCodeWidgetState extends State<PinCodeWidget> {
+class _PinLockScreenState extends State<PinLockScreen> {
   String enteredPin = '';
   bool isPinVisible = false;
   int failedAttempts = 0;
   bool isLocked = false;
-  int lockoutSeconds = 3;
+  int lockoutSeconds = 3000; // Zmieniony na 30 sekund
   Timer? lockoutTimer;
 
-  void _checkPin() {
+  Future<String?> fetchUserPin() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    return doc.data()?['pin'];
+  }
+
+  void _checkPin() async {
     if (isLocked) return;
 
-    if (loggedInUser == null) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Brak zalogowanego użytkownika")),
+        const SnackBar(content: Text("Brak zalogowanego użytkownika")),
       );
       Navigator.pushReplacementNamed(context, AppRoutes.login);
       return;
     }
 
-    if (enteredPin == loggedInUser!.pin) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    final correctPin = await fetchUserPin();
+
+    if (correctPin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Nie udało się pobrać PINu")),
+      );
+      return;
+    }
+
+    if (enteredPin == correctPin) {
+      if (widget.onPinCorrect != null) {
+        widget.onPinCorrect!();
+      } else {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
     } else {
       failedAttempts++;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Niepoprawny PIN")),
+        const SnackBar(content: Text("Niepoprawny PIN")),
       );
 
       if (failedAttempts >= 3) {
@@ -105,18 +72,21 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
   void _startLockout() {
     setState(() {
       isLocked = true;
-      failedAttempts = 0; // Reset failed attempts after lockout starts
+      failedAttempts = 0;
     });
+
+    int secondsLeft = lockoutSeconds;
 
     lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        if (lockoutSeconds > 1) {
-          lockoutSeconds--;
+        if (secondsLeft > 1) {
+          secondsLeft--;
         } else {
           lockoutTimer?.cancel();
           lockoutTimer = null;
           isLocked = false;
-          lockoutSeconds = 3; // Reset lockout timer
+          secondsLeft = lockoutSeconds;
+          enteredPin = '';
         }
       });
     });
@@ -156,19 +126,18 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           physics: const BouncingScrollPhysics(),
           children: [
+            const SizedBox(height: 50),
             const Center(
               child: Text(
-                'Wprowadź Pin',
+                'Wprowadź PIN',
                 style: TextStyle(
                   fontSize: 32,
-                  color: Colors.black,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black,
                 ),
               ),
             ),
             const SizedBox(height: 50),
-
-            /// PIN code area
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -202,8 +171,6 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 },
               ),
             ),
-
-            /// Visibility toggle button
             IconButton(
               onPressed: () {
                 setState(() {
@@ -212,12 +179,10 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
               },
               icon: Icon(
                 isPinVisible ? Icons.visibility_off : Icons.visibility,
+                color: Colors.black,
               ),
             ),
-
             SizedBox(height: isPinVisible ? 50.0 : 8.0),
-
-            /// Digits
             for (var i = 0; i < 3; i++)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -226,30 +191,25 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                   children: List.generate(
                     3,
                     (index) => numButton(1 + 3 * i + index),
-                  ).toList(),
+                  ),
                 ),
               ),
-
-            /// 0 digit with back remove
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const TextButton(onPressed: null, child: SizedBox()),
+                  const SizedBox(width: 48), // puste miejsce zamiast przycisku
                   numButton(0),
                   TextButton(
                     onPressed: isLocked
                         ? null
                         : () {
-                            setState(
-                              () {
-                                if (enteredPin.isNotEmpty) {
-                                  enteredPin = enteredPin.substring(
-                                      0, enteredPin.length - 1);
-                                }
-                              },
-                            );
+                            setState(() {
+                              if (enteredPin.isNotEmpty) {
+                                enteredPin = enteredPin.substring(0, enteredPin.length - 1);
+                              }
+                            });
                           },
                     child: const Icon(
                       Icons.backspace,
@@ -260,8 +220,6 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 ],
               ),
             ),
-
-            /// Reset button
             TextButton(
               onPressed: isLocked
                   ? null
@@ -278,11 +236,9 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 ),
               ),
             ),
-
-            /// Unlock button
             TextButton(
               onPressed: _checkPin,
-              child: Text(
+              child: const Text(
                 'Odblokuj',
                 style: TextStyle(
                   fontSize: 20,
@@ -290,16 +246,14 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
                 ),
               ),
             ),
-
-            /// Lockout timer
             if (isLocked)
               Center(
                 child: Text(
-                  'Zablokowane na $lockoutSeconds sekundy',
+                  'Zablokowane na $lockoutSeconds sekund',
                   style: const TextStyle(
                     fontSize: 18,
-                    color: Colors.red,
                     fontWeight: FontWeight.bold,
+                    color: Colors.red,
                   ),
                 ),
               ),

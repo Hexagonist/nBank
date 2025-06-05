@@ -1,32 +1,33 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class TransactionModel {
-  final DateTime date;
-  final String shop;
   final double amount;
-  final bool type; // true = uznanie, false = obciążenie
+  final DateTime date;
+  final String title;
+  final String shop;
+  final bool type; // true = Uznanie (+), false = Obciążenie (−)
 
   TransactionModel({
-    required this.date,
-    required this.shop,
     required this.amount,
-    required this.type, // 
+    required this.date,
+    required this.title,
+    required this.shop,
+    required this.type,
   });
 
-  // Jeśli pobierasz z JSON:
-  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+  factory TransactionModel.fromFirestore(Map<String, dynamic> data, String currentUserId) {
+    final isCredit = data['recipientId'] == currentUserId;
+
     return TransactionModel(
-      date: DateTime.parse(json['date']),
-      shop: json['shop'],
-      amount: json['amount'],
-      type: json['type'], // <-- i tutaj
+      amount: (data['amount'] ?? 0).toDouble(),
+      date: (data['timestamp'] as Timestamp).toDate(),
+      title: data['title'] ?? '',
+      shop: data['recipientName'] ?? '',
+      type: isCredit,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'date': date.toIso8601String(),
-      'shop': shop,
-      'amount': amount,
-      'type': type,
-    };
-  }
+  get senderID => null;
+
+  get accountNumber => null;
 }

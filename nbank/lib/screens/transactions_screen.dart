@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import '../login_screens/session_menager.dart';
 
 class TransactionsScreen extends StatefulWidget {
-  const TransactionsScreen({Key? key}) : super(key: key);
+  const TransactionsScreen({super.key});
 
   @override
   State<TransactionsScreen> createState() => _TransactionsScreenState();
@@ -17,7 +17,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   final TransactionRepository _repo = TransactionRepository();
   late Future<List<TransactionModel>> _transactionsFuture;
 
-  String selectedDateFilter = 'Ostatni';
+  String selectedDateFilter = 'Tydzień';
   String selectedTypeFilter = 'Wszystkie';
 
   @override
@@ -28,16 +28,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   List<TransactionModel> applyFilters(List<TransactionModel> transactions) {
     return transactions.where((tx) {
-      // 🔹 Filtr typu transakcji
+      // Filtr typu
       if (selectedTypeFilter == 'Uznania' && tx.type != true) return false;
       if (selectedTypeFilter == 'Obciążenia' && tx.type != false) return false;
 
-      // 🔹 Filtr daty
+      
+      // Filtr daty
       final now = DateTime.now();
       final difference = now.difference(tx.date).inDays;
 
       switch (selectedDateFilter) {
-        case 'Ostatni':
+        case 'Tydzień':
           return difference <= 7;
         case 'Miesiąc':
           return difference <= 30;
@@ -53,10 +54,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: _sessionManager.handleUserInteraction,
-        onPanDown: (_) => _sessionManager.handleUserInteraction(),
-        behavior: HitTestBehavior.translucent,
-        child: Scaffold(
+      onTap: _sessionManager.handleUserInteraction,
+      onPanDown: (_) => _sessionManager.handleUserInteraction(),
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
         appBar: AppBar(title: Text('Transakcje')),
         body: FutureBuilder<List<TransactionModel>>(
           future: _transactionsFuture,
@@ -66,20 +67,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             }
 
             final allTransactions = snapshot.data ?? [];
-            final filteredTransactions = applyFilters(allTransactions);
+            final filteredTransactions = applyFilters(allTransactions)
+            ..sort((a, b) => b.date.compareTo(a.date));
 
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  // 🔹 Filtry daty
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text("Filtr daty:", style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   Wrap(
                     spacing: 10,
-                    children: ['Ostatni', 'Miesiąc', 'Rok', 'Cały okres']
+                    children: ['Tydzień', 'Miesiąc', 'Rok', 'Cały okres']
                         .map((label) => ChoiceChip(
                               label: Text(label),
                               selected: selectedDateFilter == label,
@@ -92,8 +93,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         .toList(),
                   ),
                   const SizedBox(height: 10),
-
-                  // 🔹 Filtry typu
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text("Typ transakcji:", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -113,35 +112,51 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         .toList(),
                   ),
                   const SizedBox(height: 20),
-
-                  // 🔹 Lista transakcji
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: filteredTransactions.length,
-                      itemBuilder: (context, index) {
-                        final tx = filteredTransactions[index];
-                        final typeLabel = tx.type ? 'Uznanie' : 'Obciążenie';
-
-                        return ListTile(
-                          title: Text(tx.shop),
-                          subtitle: Text(
-                            '${DateFormat('dd.MM.yyyy').format(tx.date)} • $typeLabel',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          trailing: Text('${tx.amount.toStringAsFixed(2)} zł'),
-                        );
-                      },
-                    ),
+                      child: filteredTransactions.isEmpty
+                          ? const Center(child: Text("Brak transakcji"))
+                          : ListView.builder(
+                              itemCount: filteredTransactions.length,
+                              itemBuilder: (context, index) {
+                                final t = filteredTransactions[index];
+                                final typeLabel = t.type ? 'Uznanie' : 'Obciążenie';
+                                final sign = t.type ? '+' : '-';
+                                return ListTile(
+                                  leading: Icon(
+                                    t.type ? Icons.arrow_downward : Icons.arrow_upward,
+                                    color: t.type ? Colors.green : Colors.red,
+                                  ),
+                                  title: Text(t.title),
+                                  subtitle: Text(
+                                    '${DateFormat('dd.MM.yyyy').format(t.date)} • $typeLabel',
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                  trailing: Text(
+                                    '$sign${t.amount.toStringAsFixed(2)} zł',
+                                    style: TextStyle(
+                                      color: t.type ? Colors.green : Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                   ),
-
-                  // 🔹 Przycisk do analizy
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pushNamed(context, AppRoutes.analysis);
                     },
                     icon: Icon(Icons.bar_chart),
                     label: Text("Wykresy – analizuj wydatki"),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.budget);
+                    },
+                    icon: Icon(Icons.pie_chart),
+                    label: Text("Budżet – zarządzaj finansami"),
                   ),
                 ],
               ),

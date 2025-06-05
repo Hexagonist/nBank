@@ -8,12 +8,18 @@ class SessionManager {
   SessionManager._internal();
 
   Timer? _inactivityTimer;
-  final Duration timeout = Duration(seconds: 6); // <-  CZAS DO WYGASNIECIA
+  final Duration timeout = Duration(seconds: 60); // CZAS DO WYGASNIECIA
   BuildContext? _context;
 
   void start(BuildContext context) {
     _context = context;
     _resetTimer();
+  }
+
+  void stop() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = null;
+    _context = null;
   }
 
   void _resetTimer() {
@@ -28,6 +34,8 @@ class SessionManager {
   }
 
   void _handleTimeout() {
-    Navigator.of(_context!).pushReplacementNamed(AppRoutes.pinlock);
+    if (_context != null) {
+      Navigator.of(_context!).pushReplacementNamed(AppRoutes.pinlock);
+    }
   }
 }

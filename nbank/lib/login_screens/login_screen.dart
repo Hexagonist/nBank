@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../navigation/app_routes.dart';
-import '../user/user.dart';
-
-User? loggedInUser;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,22 +14,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
-      String email = _emailController.text;
-      String password = _passwordController.text;
-      
-      final user = users.firstWhere(
-        (user) => user.email == email && user.password == password,
-        orElse: () => User(email: '', password: '', pin: ''),
-      );
-
-      if (user.email.isNotEmpty) {
-        loggedInUser = user;
-         Navigator.pushReplacementNamed(context, AppRoutes.home);
-      }else {
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Nieprawidłowy email lub hasło")),
+          SnackBar(content: Text("Błąd logowania: ${e.toString()}")),
         );
       }
     }
@@ -51,25 +44,14 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: "Email"),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Wprowadź email";
-                  }
-                  return null;
-                },
+                validator: (value) => value!.isEmpty ? "Wprowadź email" : null,
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: "Hasło"),
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Wprowadź hasło";
-                  }
-                  return null;
-                },
+                validator: (value) => value!.isEmpty ? "Wprowadź hasło" : null,
               ),
               SizedBox(height: 24),
               ElevatedButton(
