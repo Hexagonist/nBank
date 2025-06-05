@@ -5,7 +5,9 @@ class TransactionModel {
   final DateTime date;
   final String title;
   final String shop;
-  final bool type; // true = Uznanie (+), false = Obciążenie (−)
+  final bool type; // true = Uznanie, false = Obciążenie
+  final String senderId;
+  final String recipientId;
 
   TransactionModel({
     required this.amount,
@@ -13,10 +15,14 @@ class TransactionModel {
     required this.title,
     required this.shop,
     required this.type,
+    required this.senderId,
+    required this.recipientId,
   });
 
   factory TransactionModel.fromFirestore(Map<String, dynamic> data, String currentUserId) {
-    final isCredit = data['recipientId'] == currentUserId;
+    final senderId = data['senderId'] ?? '';
+    final recipientId = data['recipientId'] ?? '';
+    final isCredit = recipientId == currentUserId;
 
     return TransactionModel(
       amount: (data['amount'] ?? 0).toDouble(),
@@ -24,10 +30,8 @@ class TransactionModel {
       title: data['title'] ?? '',
       shop: data['recipientName'] ?? '',
       type: isCredit,
+      senderId: senderId,
+      recipientId: recipientId,
     );
   }
-
-  get senderID => null;
-
-  get accountNumber => null;
 }
