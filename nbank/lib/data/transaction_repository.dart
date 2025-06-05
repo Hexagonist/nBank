@@ -10,9 +10,21 @@ class TransactionRepository {
     final user = _auth.currentUser;
     if (user == null) throw Exception("Brak zalogowanego użytkownika");
 
-    final snapshot = await _db.collection('transactions').get();
+    // Transakcje, gdzie użytkownik jest nadawcą
+    final senderSnapshot = await _db
+        .collection('transactions')
+        .where('senderId', isEqualTo: user.uid)
+        .get();
 
-    return snapshot.docs
+    // Transakcje, gdzie użytkownik jest odbiorcą
+    final recipientSnapshot = await _db
+        .collection('transactions')
+        .where('recipientId', isEqualTo: user.uid)
+        .get();
+
+    final allDocs = [...senderSnapshot.docs, ...recipientSnapshot.docs];
+
+    return allDocs
         .map((doc) => TransactionModel.fromFirestore(doc.data(), user.uid))
         .toList();
   }
